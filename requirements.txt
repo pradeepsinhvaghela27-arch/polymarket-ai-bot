@@ -1,0 +1,6 @@
+py-clob-client
+web3
+python-dotenv
+requests
+websockets
+openai
