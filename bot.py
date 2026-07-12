@@ -33,7 +33,25 @@ def main():
         print(f"Market: {question}")
         print(f"-> AI Decision: {decision.get('decision')} (Confidence: {decision.get('confidence')}%)")
         
-        if decision.get('decision') == 'BUY_YES':
+                # Only trade if AI says BUY_YES AND confidence is strictly over 80%
+        if decision.get('decision') == 'BUY_YES' and decision.get('confidence', 0) >= 80:
+            proposed_size = 1.00
+            can_trade = risk_manager.check_can_trade(current_balance, proposed_size)
+            
+            if can_trade:
+                print("   [ACTION] Executing live trade! Confidence is high.")
+                clob_token_ids = market.get('clobTokenIds', '[]')
+                try:
+                    token_ids = json.loads(clob_token_ids)
+                    yes_token_id = token_ids[0] if len(token_ids) > 0 else None
+                    if yes_token_id:
+                        success = poly_client.execute_trade(token_id=yes_token_id, side="BUY", size_usd=proposed_size)
+                        if success:
+                            risk_manager.record_trade(-proposed_size)
+                except Exception as e:
+                    print(f"   [ERROR] Could not parse token ID: {e}")
+        elif decision.get('decision') == 'BUY_YES':
+            print(f"   [SKIP] AI said YES, but confidence ({decision.get('confidence')}%) is below 80% threshold.")
             proposed_size = 1.00
             can_trade = risk_manager.check_can_trade(current_balance, proposed_size)
             
