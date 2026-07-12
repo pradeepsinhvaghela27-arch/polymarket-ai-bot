@@ -1,6 +1,5 @@
 import os
 import json
-import time
 from dotenv import load_dotenv
 from polymarket_client import PolymarketClient
 from ai_engine import AIEngine
@@ -11,9 +10,8 @@ load_dotenv()
 
 STARTING_CAPITAL = 5.0
 
-def run_bot_cycle():
-    """Runs one full scan of the markets"""
-    print("\n=== Starting New Market Scan ===")
+def main():
+    print("=== Starting Scheduled Market Scan ===")
     
     poly_client = PolymarketClient()
     ai_engine = AIEngine()
@@ -30,7 +28,6 @@ def run_bot_cycle():
     for market in markets:
         question = market.get('question', 'Unknown Market')
         
-        # Ask AI what to do
         decision = ai_engine.get_decision(market)
         
         print(f"Market: {question}")
@@ -53,15 +50,5 @@ def run_bot_cycle():
                 except Exception as e:
                     print(f"   [ERROR] Could not parse token ID: {e}")
 
-# Main 24/7 Loop
 if __name__ == "__main__":
-    print("Bot started in 24/7 Cloud Mode. Checking markets every 15 minutes.")
-    while True:
-        try:
-            run_bot_cycle()
-        except Exception as e:
-            print(f"An error occurred in the main loop: {e}")
-        
-        # Sleep for 15 minutes (900 seconds) to save API costs
-        print("\nSleeping for 15 minutes...") 
-        time.sleep(900)
+    main()
