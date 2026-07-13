@@ -34,7 +34,7 @@ def main():
         print(f"-> AI Decision: {decision.get('decision')} (Confidence: {decision.get('confidence')}%)")
         
                 # Only trade if AI says BUY_YES AND confidence is strictly over 80%
-        if decision.get('decision') == 'BUY_YES' and decision.get('confidence', 0) >= 80:
+                        if decision.get('decision') == 'BUY_YES' and decision.get('confidence', 0) >= 75:
             proposed_size = 1.00
             can_trade = risk_manager.check_can_trade(current_balance, proposed_size)
             
@@ -51,7 +51,7 @@ def main():
                 except Exception as e:
                     print(f"   [ERROR] Could not parse token ID: {e}")
         elif decision.get('decision') == 'BUY_YES':
-            print(f"   [SKIP] AI said YES, but confidence ({decision.get('confidence')}%) is below 80% threshold.")
+            print(f"   [SKIP] AI said YES, but confidence ({decision.get('confidence')}%) is below 75%.")
             proposed_size = 1.00
             can_trade = risk_manager.check_can_trade(current_balance, proposed_size)
             
