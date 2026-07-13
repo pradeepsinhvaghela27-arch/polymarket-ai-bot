@@ -10,7 +10,7 @@ class AIEngine:
             api_key=os.getenv('OPENROUTER_API_KEY')
         )
 
-        def get_decision(self, market_data, whale_context="No whale activity."):
+    def get_decision(self, market_data, whale_context="No whale activity."):
         # Safely parse the outcome prices
         try:
             prices = json.loads(market_data.get('outcomePrices', '["0.5"]'))
@@ -20,7 +20,6 @@ class AIEngine:
 
         # Parse the end date of the market
         end_date_str = market_data.get('endDate', 'Unknown')
-        # We just pass the raw date string to the AI, it understands dates perfectly
         
         prompt = f"""
         Market Question: {market_data.get('question', 'Unknown')}
