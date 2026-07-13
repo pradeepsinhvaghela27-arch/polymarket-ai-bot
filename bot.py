@@ -44,17 +44,24 @@ def main():
         
         # Ask AI what to do
         decision = ai_engine.get_decision(market)
+        dec_str = decision.get('decision', 'NO_TRADE')
+        conf_str = decision.get('confidence', 0)
+        reason_str = decision.get('reasoning', 'No reasoning provided.')
         
         print(f"\nMarket: {question}")
-        print(f"-> AI Decision: {decision.get('decision')} (Confidence: {decision.get('confidence')}%)")
+        print(f"-> AI Decision: {dec_str} (Confidence: {conf_str}%)")
+        
+        # JOURNAL: Send EVERY decision to Discord so you have a complete log
+        journal_msg = f"📋 **JOURNAL ENTRY**\nMarket: {question}\nDecision: {dec_str} ({conf_str}%)\nReason: {reason_str}"
+        send_alert(journal_msg)
         
         # If AI says BUY_YES and confidence is 75% or higher
-        if decision.get('decision') == 'BUY_YES' and decision.get('confidence', 0) >= 75:
+        if dec_str == 'BUY_YES' and conf_str >= 75:
             proposed_size = 1.00
             can_trade = risk_manager.check_can_trade(current_balance, proposed_size)
             
             if can_trade:
-                send_alert(f"🚀 TRADE EXECUTED: {question}\nConfidence: {decision.get('confidence')}%")
+                send_alert(f"🚀 TRADE EXECUTED: {question}\nConfidence: {conf_str}%")
                 print("   [ACTION] Executing live trade! Confidence is high.")
                 
                 clob_token_ids = market.get('clobTokenIds', '[]')
@@ -69,13 +76,6 @@ def main():
                 except Exception as e:
                     print(f"   [ERROR] Could not parse token ID: {e}")
                     send_alert(f"❌ ERROR parsing token ID for {question}")
-                    
-        # If AI says BUY_YES but confidence is below 75%
-        elif decision.get('decision') == 'BUY_YES':
-            msg = f"⏳ SKIP: {question}\nAI said YES, but confidence ({decision.get('confidence')}%) is below 75%."
-            print(f"   {msg}")
-            # Uncomment the line below if you want alerts for skipped trades too
-            # send_alert(msg)
 
 if __name__ == "__main__":
     main()
