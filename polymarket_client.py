@@ -5,10 +5,15 @@ import os
 
 class PolymarketClient:
     def __init__(self):
+        # Clean up the private key to ensure it starts with 0x
+        pk = os.getenv('POLYMARKET_PK', '')
+        if not pk.startswith('0x'):
+            pk = '0x' + pk
+            
         # We initialize the client just to establish the connection
         self.client = ClobClient(
             host='https://clob.polymarket.com',
-            key=os.getenv('POLYMARKET_PK'),
+            key=pk,
             chain_id=137,
             signature_type=1, # 1 for email wallet, 0 for MetaMask
             funder=os.getenv('FUNDER_ADDRESS')
