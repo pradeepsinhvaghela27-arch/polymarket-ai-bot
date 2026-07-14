@@ -5,38 +5,45 @@ import os
 
 class PolymarketClient:
     def __init__(self):
-        # Clean up the private key to ensure it has no spaces or quotes
+        # Clean Private Key
         pk = os.getenv('POLYMARKET_PK', '').strip().replace('"', '').replace("'", '')
         if not pk.startswith('0x'):
             pk = '0x' + pk
             
-        print(f"DEBUG: Private key length is {len(pk)} characters. (It should be exactly 66)")
+        # Clean Funder Address (THE FIX)
+        funder = os.getenv('FUNDER_ADDRESS', '').strip().replace('"', '').replace("'", '')
+        if not funder.startswith('0x'):
+            funder = '0x' + funder
             
-        # We initialize the client just to establish the connection
+        print(f"DEBUG: Private key length: {len(pk)} (Need 66)")
+        print(f"DEBUG: Funder address length: {len(funder)} (Need 42)")
+            
         self.client = ClobClient(
             host='https://clob.polymarket.com',
             key=pk,
             chain_id=137,
-            signature_type=1, # 1 for email wallet, 0 for MetaMask
-            funder=os.getenv('FUNDER_ADDRESS')
+            signature_type=1, # 1 for email wallet
+            funder=funder
         )
+        
+        # Derive API credentials (Required to post orders)
+        try:
+            creds = self.client.create_or_derive_api_key()
+            self.client.set_api_creds(creds)
+            print("DEBUG: API Credentials derived successfully.")
+        except Exception as e:
+            print(f"DEBUG: Could not derive API creds: {e}")
 
     def get_active_markets(self, limit=5):
-        # Fetch active markets from Polymarket's Gamma API
         url = "https://gamma-api.polymarket.com/markets"
         params = {
-            "active": "true",
-            "closed": "false",
-            "order": "volume24hr",
-            "ascending": "false",
-            "limit": limit
+            "active": "true", "closed": "false", 
+            "order": "volume24hr", "ascending": "false", "limit": limit
         }
-        # Add headers to bypass Cloudflare bot protection
         headers = {
             "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             "Accept": "application/json"
         }
-        
         try:
             response = requests.get(url, params=params, headers=headers)
             if response.status_code == 200:
@@ -52,16 +59,11 @@ class PolymarketClient:
         print("Balance check skipped (Scout Mode active).")
 
     def execute_trade(self, token_id, side="BUY", size_usd=1.0):
-        """Executes a real market order on Polymarket"""
         from py_clob_client.clob_types import MarketOrderArgs, OrderType
         
         print(f"   [ACTION] Attempting to execute BUY order for ${size_usd}...")
         try:
-            order_args = MarketOrderArgs(
-                token_id=token_id,
-                amount=size_usd,
-                side=BUY
-            )
+            order_args = MarketOrderArgs(token_id=token_id, amount=size_usd, side=BUY)
             signed_order = self.client.create_market_order(order_args)
             response = self.client.post_order(signed_order, OrderType.FOK)
             
