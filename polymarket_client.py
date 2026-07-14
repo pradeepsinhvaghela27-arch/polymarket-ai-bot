@@ -43,3 +43,25 @@ class PolymarketClient:
     def check_balance(self):
         # We will skip balance checking for now to avoid version errors
         print("Balance check skipped (Scout Mode active).")
+
+    def execute_trade(self, token_id, side="BUY", size_usd=1.0):
+        """Executes a real market order on Polymarket"""
+        from py_clob_client.clob_types import MarketOrderArgs, OrderType
+        
+        print(f"   [ACTION] Attempting to execute {side} order for ${size_usd}...")
+        try:
+            # Create the order arguments
+            order_args = MarketOrderArgs(
+                token_id=token_id,
+                amount=size_usd,
+            )
+            # Create and sign the order
+            signed_order = self.client.create_market_order(order_args)
+            # Submit the order (Fill or Kill means it executes immediately at market price or cancels)
+            response = self.client.post_order(signed_order, OrderType.FOK)
+            
+            print(f"   [SUCCESS] Trade executed! Transaction details: {response}")
+            return True
+        except Exception as e:
+            print(f"   [ERROR] Trade failed: {e}")
+            return False
