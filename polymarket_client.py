@@ -10,7 +10,7 @@ class PolymarketClient:
         if not pk.startswith('0x'):
             pk = '0x' + pk
             
-        # Clean Funder Address (THE FIX)
+        # Clean Funder Address
         funder = os.getenv('FUNDER_ADDRESS', '').strip().replace('"', '').replace("'", '')
         if not funder.startswith('0x'):
             funder = '0x' + funder
@@ -22,15 +22,26 @@ class PolymarketClient:
             host='https://clob.polymarket.com',
             key=pk,
             chain_id=137,
-            signature_type=1, # 1 for email wallet
+            signature_type=1,
             funder=funder
         )
         
-        # Derive API credentials (Required to post orders)
+        # Derive API credentials with fallbacks for different SDK versions
         try:
-            creds = self.client.create_or_derive_api_key()
-            self.client.set_api_creds(creds)
-            print("DEBUG: API Credentials derived successfully.")
+            if hasattr(self.client, 'create_or_derive_api_key'):
+                creds = self.client.create_or_derive_api_key()
+            elif hasattr(self.client, 'derive_api_key'):
+                creds = self.client.derive_api_key()
+            elif hasattr(self.client, 'create_api_key'):
+                creds = self.client.create_api_key()
+            else:
+                creds = None
+                
+            if creds:
+                self.client.set_api_creds(creds)
+                print("DEBUG: API Credentials derived successfully.")
+            else:
+                print("DEBUG: Could not find API key derivation method.")
         except Exception as e:
             print(f"DEBUG: Could not derive API creds: {e}")
 
