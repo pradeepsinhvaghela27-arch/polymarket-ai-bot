@@ -1,5 +1,6 @@
 import requests
 from py_clob_client.client import ClobClient
+from py_clob_client.order_builder.constants import BUY
 import os
 
 class PolymarketClient:
@@ -48,12 +49,13 @@ class PolymarketClient:
         """Executes a real market order on Polymarket"""
         from py_clob_client.clob_types import MarketOrderArgs, OrderType
         
-        print(f"   [ACTION] Attempting to execute {side} order for ${size_usd}...")
+        print(f"   [ACTION] Attempting to execute BUY order for ${size_usd}...")
         try:
-            # Create the order arguments
+            # Create the order arguments, explicitly stating side=BUY
             order_args = MarketOrderArgs(
                 token_id=token_id,
                 amount=size_usd,
+                side=BUY
             )
             # Create and sign the order
             signed_order = self.client.create_market_order(order_args)
